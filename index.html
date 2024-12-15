@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image and Audio Generation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+        }
+        textarea {
+            width: 80%;
+            height: 100px;
+            margin: 20px 0;
+            font-size: 16px;
+            padding: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #output {
+            margin-top: 20px;
+        }
+        img {
+            max-width: 80%;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+        }
+        audio {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Image and Audio Generation</h1>
+    </header>
+
+    <div>
+        <textarea id="prompt-input" placeholder="Enter a description for the image and audio"></textarea><br>
+        <button onclick="generateMedia()">Generate</button>
+    </div>
+
+    <div id="output">
+        <!-- Image and audio will be displayed here -->
+    </div>
+
+    <script>
+        async function generateMedia() {
+            const prompt = document.getElementById("prompt-input").value;
+            if (!prompt) {
+                alert("Please enter a prompt!");
+                return;
+            }
+
+            document.getElementById("output").innerHTML = "<p>Generating...</p>";
+
+            try {
+                // Send POST request to backend
+                const response = await fetch("/generate-media", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ prompt, text: prompt }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    const imgSrc = "data:image/jpeg;base64," + data.image_data;
+                    const audioSrc = data.audio_path;
+
+                    document.getElementById("output").innerHTML = `
+                        <h3>Generated Image:</h3>
+                        <img src="${imgSrc}" alt="Generated Image">
+                        <h3>Generated Audio:</h3>
+                        <audio controls>
+                            <source src="${audioSrc}" type="audio/wav">
+                            Your browser does not support the audio element.
+                        </audio>
+                    `;
+                } else {
+                    const error = await response.json();
+                    alert("Error: " + error.error);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Failed to generate media. Check the server.");
+            }
+        }
+    </script>
+</body>
+</html>
+
